@@ -1,21 +1,17 @@
 import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 
 from datetime import datetime, timedelta
 import json
 import pandas as pd
+
+from concurrent.futures import ThreadPoolExecutor
 from votacaoSemVotos import votacaoSemVotos
 
 BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
 
 def _get(url: str):
-
-    session = requests.Session()
-    retries = Retry(total=5, backoff_factor=1, status_forcelist=[504, 502, 500, 503])
-    session.mount('https://', HTTPAdapter(max_retries=retries))
     
-    res = session.get(url, timeout=60)
+    res = requests.get(url, timeout=60)
     res.raise_for_status()
 
     return res.json()['dados']
@@ -43,7 +39,7 @@ def processar_votos(votos: list, id_votacao: str) -> dict:
     # transforma o valor do voto em {'id_votacao': 'voto'}
     votos = votos['tipoVoto'].apply(lambda voto: {id_votacao: voto})
 
-    return votos
+    return votos.to_dict()
 
 
 def get_votacao(id: str) -> dict:
@@ -73,7 +69,7 @@ def _get_id_votacoes(parametros: list) -> list:
     while continue_buscando: 
         url = url_base + '&'.join(parametros + [f'pagina={pagina}'])
 
-        print(url)
+        
         dados = _get(url)
 
         if not len(dados):
@@ -102,12 +98,12 @@ def get_id_votacoes(inicio: datetime, fim: datetime) -> list:
         parametros = []
 
         if data_fim.year == inicio.year:
-            parametros += [f'dataInicio={inicio.strftime('%Y-%m-%d')}']
+            parametros += [f'dataInicio={inicio.strftime("%Y-%m-%d")}']
 
         if data_fim.year + 1 == fim.year:
             data_fim = datetime(data_fim.year, 12, 31)
         
-        parametros += [f'dataFim={data_fim.strftime('%Y-%m-%d')}']
+        parametros += [f'dataFim={data_fim.strftime("%Y-%m-%d")}']
 
             
         
@@ -118,19 +114,19 @@ def get_id_votacoes(inicio: datetime, fim: datetime) -> list:
     return total_data
 
 def main():
-    print("COLETA DOS ID COMEÇANDO-----------------")
+    print("COLETA DOS ID COMEÇANDO-----------------", flush= True)
     ids = get_id_votacoes(datetime(2022, 6, 1), datetime(2023, 6, 1))
     print(f"COLETADOS {len(ids):<10} IDS----------------")
 
-    print("COLETA DAS INFORMAÇOES DAS VOTAÇÕES-----")
+    print("COLETA DAS INFORMAÇOES DAS VOTAÇÕES-----", flush= True)
     votacoes = []
     for indice, id in enumerate(ids):
         try:
             votacao = get_votacao(id)
             votacoes += [votacao]
-            print(f'indice {indice:<10}:  COLETADO')
+            print(f'indice {indice:<10}:  COLETADO', flush= True)
         except votacaoSemVotos:
-            print(f'indice{indice:<10}: SEM VOTOS')
+            print(f'indice {indice:<10}: SEM VOTOS', flush= True)
 
     with open('votacoes.json', 'w') as json_file:
         json.dump(votacoes, json_file)
