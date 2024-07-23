@@ -74,7 +74,6 @@ def _get_id_votacoes(parametros: list) -> list:
 
     while continue_buscando: 
         url = url_base + '&'.join(parametros + [f'pagina={pagina}'])
-
         
         dados = _get(url)
 
@@ -119,9 +118,32 @@ def get_id_votacoes(inicio: datetime, fim: datetime) -> list:
 
     return total_data
 
+
+def processar_deputados():
+    
+    with open('votacoes.json', 'r') as json_file:
+        itens = json.load(json_file)
+
+    deputados = {}
+    for item in itens:
+        votos = item['votos']
+        
+        for key, value in votos.items():
+            try: 
+                deputados[key]['votos'] |= value
+            except KeyError:
+                deputados |= {
+                    key: {'votos': value}
+                }
+                deputados[key] |= _get(f'{BASE_URL}/deputados/{key}') 
+        
+    with open('deputados.json', 'w') as json_file:
+        json.dump(deputados, json_file)
+
+
 def main():
     print("COLETA DOS ID COMEÇANDO-----------------", flush= True)
-    ids = get_id_votacoes(datetime(2022, 6, 1), datetime(2023, 6, 1))
+    ids = get_id_votacoes(datetime(2023, 1, 1), datetime(2023, 12, 31))
     print(f"COLETADOS {len(ids):<10} IDS----------------")
 
     print("COLETA DAS INFORMAÇOES DAS VOTAÇÕES-----", flush= True)
@@ -135,7 +157,7 @@ def main():
             except votacaoSemVotos:
                 print(f'indice {indice:<10}: SEM VOTOS', flush= True)
 
-    
+    processar_deputados()
 
 if __name__ == "__main__":
     main()
