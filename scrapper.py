@@ -2,11 +2,10 @@ import requests
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import pandas as pd
 
-from concurrent.futures import ThreadPoolExecutor
 from votacaoSemVotos import votacaoSemVotos
 
 BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
@@ -23,14 +22,12 @@ def _get(url: str):
     return res.json()['dados']
 
 
-def get_proposicao(id: str) -> dict:
-    url = f'{BASE_URL}/proposicoes/{id}'
+# def get_proposicao(id: str) -> dict:
+#     url = f'{BASE_URL}/proposicoes/{id}'
 
-    return _get(url)
+#     return _get(url)
 
-
-
-def processar_votos(votos: list, id_votacao: str) -> dict:
+def _processar_votos(votos: list, id_votacao: str) -> dict:
     '''
         Transforma o resultado da request de votos em um dicionario com a estrutura {'id_deputado': {'id_votacao': 'voto'}}
         Entrada: resultado da resquest de votos
@@ -48,7 +45,7 @@ def processar_votos(votos: list, id_votacao: str) -> dict:
     return votos.to_dict()
 
 
-def get_votacao(id: str) -> dict:
+def _get_votacao(id: str) -> dict:
 
     # Ver se existem dados de votos
     votos = _get(f'{BASE_URL}/votacoes/{id}/votos')
@@ -56,7 +53,7 @@ def get_votacao(id: str) -> dict:
     if not len(votos):
         raise votacaoSemVotos()
     
-    votos = processar_votos(votos, id)
+    votos = _processar_votos(votos, id)
 
     # Pegar as infos das votações
     votacao = _get(f'{BASE_URL}/votacoes/{id}')
@@ -66,7 +63,7 @@ def get_votacao(id: str) -> dict:
     
     return votacao
 
-def _get_id_votacoes(parametros: list) -> list:
+def __get_id_votacoes(parametros: list) -> list:
     pagina = 1
     continue_buscando = True
     total_dados = []
@@ -84,7 +81,7 @@ def _get_id_votacoes(parametros: list) -> list:
 
         pagina += 1
 
-def get_id_votacoes(inicio: datetime, fim: datetime) -> list:
+def _get_id_votacoes(inicio: datetime, fim: datetime) -> list:
     '''
     Coleta a lista de id de votações em um determinado período de tempo
 
@@ -112,16 +109,16 @@ def get_id_votacoes(inicio: datetime, fim: datetime) -> list:
 
             
         
-        total_data.extend(_get_id_votacoes(parametros= parametros))
+        total_data.extend(__get_id_votacoes(parametros= parametros))
         data_fim = data_fim.replace(year=data_fim.year - 1)
     #
 
     return total_data
 
 
-def processar_deputados():
+def _processar_deputados():
     
-    with open('votacoes.json', 'r') as json_file:
+    with open('data/votacoes.json', 'r') as json_file:
         itens = json.load(json_file)
 
     deputados = {}
@@ -137,27 +134,28 @@ def processar_deputados():
                 }
                 deputados[key] |= _get(f'{BASE_URL}/deputados/{key}') 
         
-    with open('deputados.json', 'w') as json_file:
+    with open('data/deputados.json', 'w') as json_file:
         json.dump(deputados, json_file)
 
 
-def main():
+def scrapper(inicio: datetime, fim: datetime):
     print("COLETA DOS ID COMEÇANDO-----------------", flush= True)
-    ids = get_id_votacoes(datetime(2023, 1, 1), datetime(2023, 12, 31))
+    ids = _get_id_votacoes(inicio, fim)
     print(f"COLETADOS {len(ids):<10} IDS----------------")
 
     print("COLETA DAS INFORMAÇOES DAS VOTAÇÕES-----", flush= True)
     
-    with open('votacoes.json', 'w') as json_file:
-        for indice, id in enumerate(ids):
-            try:
-                votacao = get_votacao(id)
-                json.dump(votacao, json_file)
-                print(f'indice {indice:<10}:  COLETADO', flush= True)
-            except votacaoSemVotos:
-                print(f'indice {indice:<10}: SEM VOTOS', flush= True)
+    votacoes = []
+    for indice, id in enumerate(ids):
+        try:
+            votacoes.append(_get_votacao(id))
+            
+            print(f'indice {indice:<10}:  COLETADO')
+        except votacaoSemVotos:
+            print(f'indice {indice:<10}: SEM VOTOS')
 
-    processar_deputados()
+    with open('data/votacoes.json', 'w') as json_file:
+        json.dump(votacoes, json_file)
 
-if __name__ == "__main__":
-    main()
+    _processar_deputados()
+
