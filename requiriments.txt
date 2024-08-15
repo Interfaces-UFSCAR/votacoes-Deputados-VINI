@@ -1,0 +1,6 @@
+numpy
+pandas
+networx
+matplotlib
+forceatlas2
+ipysigma
