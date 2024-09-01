@@ -26,7 +26,7 @@ def estruturar_rede() -> nx.Graph:
         print
 
         if len(intersec) > 0:
-            concordancia = np.float128((votos_dep1[intersec] == votos_dep2[intersec]).sum()/len(intersec))
+            concordancia = np.float64((votos_dep1[intersec] == votos_dep2[intersec]).sum()/len(intersec))
 
             if not id_dep1 in graph:
                 graph.add_node(

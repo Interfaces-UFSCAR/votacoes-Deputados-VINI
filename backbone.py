@@ -1,19 +1,21 @@
+from utils import *
+
 import networkx as nx
 import numpy as np
-import pickle
+
 
 def calculate_strength(graph: nx.Graph):
     
     nodes = graph.nodes(data=True)
     
     for node, edges in graph.adjacency():
-        strength = np.float128(sum(edge['concordancia'] for edge in edges.values()))
+        strength = np.float64(sum(edge['concordancia'] for edge in edges.values()))
 
         node_info = nodes[node]
         node_info |= {'strength': strength}
         graph.add_node(node, **node_info)
 
-def calculate_probability(weight: np.float128, degree: int) -> np.float128:
+def calculate_probability(weight: np.float64, degree: int) -> np.float64:
     return (degree - 1) * (1 - ((1 - weight)**(degree + 1))) / (degree + 1)
 
 # def probability_cut(graph: nx.Graph, probability: float):
@@ -77,11 +79,9 @@ def backbone_extraction(graph: nx.Graph):
 def backbone():
     print("BACKBONE", flush= True)
     
-    with open('data/raw.pkl', 'rb') as pickle_file:
-        graph = pickle.load(pickle_file)
+    graph = load_gaph()
     
     
     backbone_extraction(graph)
     
-    with open('data/bb.pkl', 'wb') as pickle_file:
-        pickle.dump(graph, pickle_file)
+    
