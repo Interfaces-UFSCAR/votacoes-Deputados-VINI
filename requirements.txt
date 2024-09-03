@@ -4,3 +4,4 @@ networx
 matplotlib
 forceatlas2
 ipysigma
+tqdm

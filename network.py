@@ -1,8 +1,10 @@
-import pandas as pd
-import json
+from utils import *
+
+import logging
 import itertools
+
+import pandas as pd
 import networkx as nx
-import pickle
 import numpy as np
 
 MAP_VOTOS = {
@@ -12,9 +14,7 @@ MAP_VOTOS = {
     "Obstrução": 0
 }
 
-def estruturar_rede() -> nx.Graph:
-    with open('data/deputados.json', 'r') as json_file:
-        deputados = json.load(json_file)
+def estruturar_rede(deputados: dict) -> nx.Graph:
     
     graph = nx.Graph()
 
@@ -54,12 +54,13 @@ def estruturar_rede() -> nx.Graph:
     return graph
 
 
-def network():
-    print("ESTRUTURAÇÃO DA REDE", flush= True)
-    graph = estruturar_rede()
+def network(file_name: str):
+    print_log("ESTRUTURAÇÃO DA REDE-------------------")
+    
+    deputados = load_json(file_name + "_deputados")
+    graph = estruturar_rede(deputados)
 
-    with open('data/raw.pkl', 'wb') as pickle_file:
-        pickle.dump(graph, pickle_file)
+    save_graph(file_name + "_raw_net", graph)
 
     
 

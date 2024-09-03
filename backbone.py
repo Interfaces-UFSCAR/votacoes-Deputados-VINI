@@ -1,5 +1,7 @@
 from utils import *
 
+import logging
+
 import networkx as nx
 import numpy as np
 
@@ -39,8 +41,9 @@ def get_largest_component(graph: nx.Graph) -> nx.Graph:
 
 #     prob_min_perc = 
 
-def get_best_cut(graph: nx.Graph):
-    n_size = len(graph)
+def get_best_cut(graph: nx.Graph) -> tuple[int, int]:
+    init_order = graph.order()
+    init_size = graph.size()
     less_probably_edges = iter(sorted(graph.edges(data=True), key= lambda x: x[2]['probability']))
 
     continue_backbone = True
@@ -50,13 +53,15 @@ def get_best_cut(graph: nx.Graph):
 
         largest_component = get_largest_component(graph)
         
-        if len(largest_component) <= n_size * 0.8:
+        if len(largest_component) <= init_order * 0.8:
             continue_backbone = False
 
     nodes_to_remove = set(graph.nodes) - get_largest_component(graph)
     graph.remove_nodes_from(nodes_to_remove)
 
-def backbone_extraction(graph: nx.Graph):
+    return init_order - graph.order(), init_size - graph.size()
+
+def backbone_extraction(graph: nx.Graph) -> tuple[int, int]:
     
     calculate_strength(graph)
 
@@ -74,14 +79,16 @@ def backbone_extraction(graph: nx.Graph):
         graph.add_edge(*edge, **edge_data)
 
 
-    get_best_cut(graph)
+    return get_best_cut(graph)
 
-def backbone():
-    print("BACKBONE", flush= True)
+def backbone(file_name: str):
+    print_log("ESPARSIFICAÇÃO DE ARESTAS COM BACKBONE-")
     
-    graph = load_gaph()
+    graph = load_graph(file_name + "_raw_net")
+        
+    nodes_rem, edges_rem = backbone_extraction(graph)
+
+    print_log(f"{nodes_rem} vértices removidos e {edges_rem} arestas removidas")
     
-    
-    backbone_extraction(graph)
-    
+    save_graph(file_name + "_backboned_net", graph)
     
