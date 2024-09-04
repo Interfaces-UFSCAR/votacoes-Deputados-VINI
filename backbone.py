@@ -84,11 +84,11 @@ def backbone_extraction(graph: nx.Graph) -> tuple[int, int]:
 def backbone(file_name: str):
     print_log("ESPARSIFICAÇÃO DE ARESTAS COM BACKBONE-")
     
-    graph = load_graph(file_name + "_raw_net")
+    graph = load_graph(f"{file_name}_raw_net")
         
     nodes_rem, edges_rem = backbone_extraction(graph)
 
     print_log(f"{nodes_rem} vértices removidos e {edges_rem} arestas removidas")
     
-    save_graph(file_name + "_backboned_net", graph)
+    save_graph(f"{file_name}_net", graph)
     
