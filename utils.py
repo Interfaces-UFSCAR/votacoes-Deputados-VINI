@@ -1,6 +1,8 @@
 import pickle
 import json
 from datetime import datetime
+from collections.abc import Iterable, Callable
+from multiprocessing import Process
 
 import networkx as nx
 
@@ -23,6 +25,16 @@ def load_json(file_name: str) -> dict | list | tuple:
         json_obj = json.load(json_file)
 
     return json_obj
+
+def save_pdf(file_name: str, pdf_data: bytes):
+    with open(f'{file_name}.pdf', 'wb') as pdf:
+        pdf.write(pdf_data)
+
+def run_assync(func: Callable, args: Iterable = []):
+    process = Process(target= func, args= args)
+    process.start()
+
+    return process
 
 def print_log(message: str, flush= True):
     print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {message}", flush= flush)

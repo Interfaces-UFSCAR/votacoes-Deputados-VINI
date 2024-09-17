@@ -82,13 +82,13 @@ def backbone_extraction(graph: nx.Graph) -> tuple[int, int]:
     return get_best_cut(graph)
 
 def backbone(file_name: str):
-    print_log("ESPARSIFICAÇÃO DE ARESTAS COM BACKBONE-")
+    print_log(F"{'BACKBONE':<10}: ESPARSIFICAÇÃO DE ARESTAS COM BACKBONE-")
     
     graph = load_graph(f"{file_name}_raw_net")
         
     nodes_rem, edges_rem = backbone_extraction(graph)
 
-    print_log(f"{nodes_rem} vértices removidos e {edges_rem} arestas removidas")
+    print_log(f"{'BACKBONE':<10}: {nodes_rem} vértices removidos e {edges_rem} arestas removidas")
     
     save_graph(f"{file_name}_net", graph)
     
