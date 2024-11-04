@@ -1,9 +1,9 @@
-from scrapper import scrapper
-from network import network
-from backbone import backbone
-from communities import communities
-from plot import plot_nework
-from utils import print_log, att_context, get_context, clean_mode
+from source.scrapper import scrapper
+from source.network import network
+from source.backbone import backbone
+from source.communities import communities
+from source.plot import plot_nework
+from source.utils import print_log, att_context, get_context, clean_mode
 
 from datetime import datetime
 import sys
