@@ -14,8 +14,10 @@ MAP_VOTOS = {
     "Obstrução": -1
 }
 
-def estruturar_rede(deputados: dict) -> nx.Graph:
+def estruturar_rede(deputados: dict, total_votacoes: int) -> nx.Graph:
     
+    
+
     graph = nx.Graph()
 
     for id_dep1, id_dep2 in itertools.combinations(deputados.keys(), 2):
@@ -25,7 +27,7 @@ def estruturar_rede(deputados: dict) -> nx.Graph:
         intersec = votos_dep1.index.intersection(votos_dep2.index)
 
         if len(intersec) > 0:
-            concordancia = np.float64((votos_dep1[intersec] * votos_dep2[intersec]).sum()) / len(intersec)
+            concordancia = np.float64((votos_dep1[intersec] * votos_dep2[intersec]).sum()) / total_votacoes
 
             if concordancia > 0:
                 if not id_dep1 in graph:
@@ -58,7 +60,10 @@ def network(file_name: str):
     print_log(f"{'NETWORK':<10}:ESTRUTURAÇÃO DA REDE-------------------")
     
     deputados = load_json(file_name + "_deputados")
-    graph = estruturar_rede(deputados)
+    votacoes = load_json(file_name + "_votacoes")
+    total_votacoes = len(votacoes.keys())
+    del votacoes
+    graph = estruturar_rede(deputados, total_votacoes)
 
     save_graph(file_name + "_raw_net", graph)
 
