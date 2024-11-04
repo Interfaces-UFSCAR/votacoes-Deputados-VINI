@@ -1,7 +1,3 @@
-numpy
-pandas
-networx
-matplotlib
+networkx
+ipysigma 
 forceatlas2
-ipysigma
-tqdm
