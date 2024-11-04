@@ -1,10 +1,10 @@
 import requests
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
-from requests.exceptions import MissingSchema, RetryError
+from requests.exceptions import MissingSchema, RetryError, HTTPError
 from datetime import datetime
 from collections.abc import Iterable, Generator
-from threading import Thread
+from io import TextIOWrapper
 
 import pandas as pd
 
@@ -67,11 +67,15 @@ def _get_proposicoes_afetadas(proposicoes: Iterable[dict]) -> list[dict]:
 
 def _get_proposicao_citada(url: str) -> dict:
     prop_id = url.rsplit(sep= '/', maxsplit= 1)[-1]
-    resultado = _get(url)
+    
+    try:
+        resultado = _get(url)
+    except HTTPError:
+        return None
+    else:
+        run_assync(func= _get_pdf, args= [resultado['urlInteiroTeor'], f"./data/proposicoes/citadas/{prop_id}"])
 
-    run_assync(func= _get_pdf, args= [resultado['urlInteiroTeor'], f"./data/proposicoes/citadas/{prop_id}"])
-
-    return resultado
+        return resultado
 
 
 def _processar_votos(votos: Iterable[dict], 
@@ -193,7 +197,7 @@ def _get_dicursos_from_deputados(data_inicio: datetime,
     for deputado, discursos in _get_discursos(deputados, data_inicio, data_fim):
         print_log(f"{'SCRAPPER':<10}: DEPUTADO: {deputado}", flush=True)
         run_assync(func= save_json, args= [f'discursos/{file_name}_{deputado}', discursos])
-
+        
 
 
 def scrapper(data_inicio: datetime, 
@@ -217,12 +221,14 @@ def scrapper(data_inicio: datetime,
         except VotacaoSemVotos:
             print_log(f"{'SCRAPPER':<10}: indice {indice:<10}: SEM VOTOS", flush= False)
 
-    run_assync(func= save_json, args= [file_name + "_votacoes", votacoes])
+    save_json(file_name + "_votacoes", votacoes)
+    att_context({'votacoes': True}, file_name)
 
     print_log(f"{'SCRAPPER':<10}: COLETA DAS INFORMAÇOES DOS DEPUTADOS----")
 
     deputados = _get_deputados(votacoes)
     save_json(file_name + "_deputados", deputados)
+    att_context({'deputados': True}, file_name)
 
     process = run_assync(func= _get_dicursos_from_deputados, args= [data_inicio, data_fim, file_name])
 
