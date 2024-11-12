@@ -1,4 +1,4 @@
-from utils import *
+from .utils import *
 
 import logging
 import itertools
@@ -14,7 +14,7 @@ MAP_VOTOS = {
     "Obstrução": -1
 }
 
-def estruturar_rede(deputados: dict, total_votacoes: int) -> nx.Graph:
+def create_network(deputados: dict, total_votacoes: int) -> nx.Graph:
     
     
 
@@ -63,7 +63,7 @@ def network(file_name: str):
     votacoes = load_json(file_name + "_votacoes")
     total_votacoes = len(votacoes.keys())
     del votacoes
-    graph = estruturar_rede(deputados, total_votacoes)
+    graph = create_network(deputados, total_votacoes)
 
     save_graph(file_name + "_raw_net", graph)
 

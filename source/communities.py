@@ -1,5 +1,5 @@
-from utils import *
-from plot import plot_nework
+from .utils import *
+from .plot import plot_nework
 
 from collections import Counter
 

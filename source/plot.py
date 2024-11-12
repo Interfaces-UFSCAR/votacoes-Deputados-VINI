@@ -3,7 +3,7 @@ import networkx as nx
 import ipysigma as sigma
 import pickle
 
-from utils import *
+from .utils import *
 
 CORES_PARTIDOS = {
     "AVANTE": "#d27901",

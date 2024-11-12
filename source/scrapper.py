@@ -8,8 +8,8 @@ from io import TextIOWrapper
 
 import pandas as pd
 
-from classes import VotacaoSemVotos
-from utils import *
+from .classes import VotacaoSemVotos
+from .utils import *
 
 BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
 
