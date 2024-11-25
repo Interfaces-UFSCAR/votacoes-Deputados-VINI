@@ -1,3 +1,0 @@
-networkx
-ipysigma 
-forceatlas2

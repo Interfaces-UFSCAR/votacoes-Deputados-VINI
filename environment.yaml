@@ -2,6 +2,8 @@ name: votacoes
 channels:
   - conda-forge
   - anaconda
+  - huggingface
+  - pytorch
 dependencies:
   - python==3.11
   - fa2
@@ -10,9 +12,11 @@ dependencies:
   - pandas
   - matplotlib
   - requests
+  - networkx
   - transformers
-  - pip:
-    - networkx
-    - ipysigma
+  - torch
+  - huggingface_hub
+  - accelerate
+  - deepspeed
     
     
