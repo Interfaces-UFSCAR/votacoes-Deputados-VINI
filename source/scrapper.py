@@ -8,7 +8,7 @@ from io import TextIOWrapper
 
 import pandas as pd
 
-from .classes import VotacaoSemVotos
+from .classes import VotacaoSemVotos, ProposicaoNaoExiste
 from .utils import *
 
 BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
@@ -47,11 +47,14 @@ def _get_with_many_pages(url_base: str, parametros: Iterable[str]) -> list[dict]
 
 def _get_pdf(url: str, file_name: str):
     if url != None:
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
 
-        response.raise_for_status()
-        
-        save_pdf(file_name, response.content)
+            response.raise_for_status()
+        except HTTPError:
+            raise ProposicaoNaoExiste
+        else:
+            save_pdf(file_name, response.content)
 
 def _get_proposicoes_afetadas(proposicoes: Iterable[dict]) -> list[dict]:
     proposicoes_afetadas = []
