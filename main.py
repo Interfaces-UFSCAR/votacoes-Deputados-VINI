@@ -3,6 +3,7 @@ from source.network import network
 from source.backbone import backbone
 from source.communities import communities
 from source.plot import plot_nework
+from source.summarizer import summarizer
 from source.utils import print_log, att_context, get_context, clean_mode
 
 from datetime import datetime
@@ -46,6 +47,9 @@ def main():
         if 's' in modo:
             process.join()
             att_context({'discursos': True}, file_name)
+
+        if 'm' in modo:
+            summarizer(file_name)
 
         print_log(f"{'MAIN':<10}: EXECUÇÃO COMPLETA")
 

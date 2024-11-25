@@ -26,6 +26,14 @@ def load_json(file_name: str) -> dict | list | tuple:
 
     return json_obj
 
+def save_summary(file_name: str, summary: str):
+    with open(f'./data/resumos/{file_name}.txt', 'w') as summary_file:
+        summary_file.write(summary)
+
+def load_summary(file_name: str) -> str:
+    with open(f'./data/resumos/{file_name}.txt', 'r') as summary_file:
+        return '\n'.join(summary_file.readlines())
+
 def save_pdf(file_name: str, pdf_data: bytes):
     with open(f'{file_name}.pdf', 'wb') as pdf:
         pdf.write(pdf_data)
