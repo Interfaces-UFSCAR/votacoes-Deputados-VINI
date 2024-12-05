@@ -1,4 +1,4 @@
-from utils import *
+from .utils import *
 
 import os
 
@@ -111,11 +111,11 @@ def summarize_community(deputes: list[str], summarizer: TextGenerationPipeline, 
 
         print_log(f"{'SUMMARIZER':<10}: Deputado {data['comunidade']}|{id}: {data['nome']} | {data['partido']}")
 
-        if os.path.exists(f'./data/resumos/{file_name}/{file_name}_{data["comunidade"]}_{id}.txt'):
-            depute_summary = load_summary(f'{file_name}/{file_name}_{data["comunidade"]}_{id}')
+        if os.path.exists(f'./data/resumos/{file_name}/{file_name}_{id}.txt'):
+            depute_summary = load_summary(f'{file_name}/{file_name}_{id}')
         else:
             depute_summary = summarize_speeches(get_discursos(file_name, id), summarizer)
-            save_summary(f'{file_name}/{file_name}_{data["comunidade"]}_{id}', depute_summary)
+            save_summary(f'{file_name}/{file_name}_{id}', depute_summary)
 
         return depute_summary
     
@@ -157,6 +157,3 @@ def summarizer(file_name: str):
         print_log(f"{'SUMMARIZER':<10}: Iniciando sumarização da COMUNIDADE {community}")
         summary = summarize_community(communities[community], summarizer, file_name)
         save_summary(f'{file_name}/_{file_name}-{community}', summary)
-
-
-summarizer('2023-01-01_2023-12-31')
