@@ -14,9 +14,13 @@ dependencies:
   - requests
   - networkx
   - transformers
-  - torch
+  - pytorch
   - huggingface_hub
   - accelerate
   - deepspeed
+  - pip
+  - pip: 
+    - ipysigma
+  
     
     
