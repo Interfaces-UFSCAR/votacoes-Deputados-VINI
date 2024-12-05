@@ -4,7 +4,8 @@ from .plot import plot_nework
 from collections import Counter
 
 import networkx as nx
-from networkx.algorithms.community import greedy_modularity_communities
+
+from networkx.algorithms.community import greedy_modularity_communities, asyn_lpa_communities
 
 def att_nodes(graph: nx.Graph, communities: list[set]):
     
@@ -14,10 +15,8 @@ def att_nodes(graph: nx.Graph, communities: list[set]):
 
 def communities(file_name: str):
     graph = load_graph(f'{file_name}_net')
-    
-    nodes = graph.nodes()
 
-    communities = greedy_modularity_communities(graph, 'concordancia')
+    communities = asyn_lpa_communities(graph, 'concordancia')
 
     att_nodes(graph, communities)
 
