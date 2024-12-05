@@ -47,34 +47,6 @@ def run_assync(func: Callable, args: Iterable = []):
 def print_log(message: str, flush= True):
     print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {message}", flush= flush)
 
-def att_context(context: dict, file_name: str):
-    with open(f"./data/context.json", mode= 'r') as context_file:
-        full_context = json.load(context_file)
-        
-    full_context[file_name] |= context
-    
-    with open(f"./data/context.json", mode= 'w') as context_file:
-        json.dump(full_context, context_file)
-
-def get_context(file_name: str) -> dict:
-    with open(f"./data/context.json", mode= 'r') as context_file:
-        return json.load(context_file)[file_name]
-    
-def clean_mode(mode: str, context: dict) -> str:
-    if context['votacoes'] and context['deputados'] and context['discursos']:
-        mode.replace('s', '')
-
-    if context['network']:
-        mode.replace('n', '')
-
-    if context['backbone']:
-        mode.replace('b', '')
-
-    if context['communities']:
-        mode.replace('c', '')
-
-    return mode
-
     
 
 

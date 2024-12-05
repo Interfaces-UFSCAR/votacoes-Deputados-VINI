@@ -4,10 +4,42 @@ from source.backbone import backbone
 from source.communities import communities
 from source.plot import plot_nework
 from source.summarizer import summarizer
-from source.utils import print_log, att_context, get_context, clean_mode
+from source.utils import print_log
 
 from datetime import datetime
 import sys
+import json
+
+def att_context(context: dict, file_name: str):
+    with open(f"./data/context.json", mode= 'r') as context_file:
+        full_context = json.load(context_file)
+        
+    full_context[file_name] |= context
+    
+    with open(f"./data/context.json", mode= 'w') as context_file:
+        json.dump(full_context, context_file)
+
+def get_context(file_name: str) -> dict:
+    with open(f"./data/context.json", mode= 'r') as context_file:
+        return json.load(context_file)[file_name]
+    
+def clean_mode(mode: str, context: dict) -> str:
+    if context['votacoes'] and context['deputados'] and context['discursos']:
+        mode = mode.replace('s', '')
+
+    if context['network'] or not ((context['votacoes'] and context['deputados']) or 's' in mode):
+        mode = mode.replace('n', '')
+
+    if context['backbone'] or not(context['network'] or 'n' in mode):
+        mode = mode.replace('b', '')
+
+    if context['communities'] or not(context['backbone'] or 'b' in mode):
+        mode = mode.replace('c', '')
+
+    if context['summarization'] or not(context['discursos'] or 's' in mode):
+        mode = mode.replace('m', '')
+
+    return mode
 
 def main():
     args = sys.argv[1:]
@@ -20,6 +52,7 @@ def main():
     file_name = f"{inicio.strftime('%Y-%m-%d')}_{fim.strftime('%Y-%m-%d')}"
 
     modo = clean_mode(modo, get_context(file_name))
+    print(modo)
    
     with open(f"./data/logs/{file_name}.log", mode="w") as stdout:
         sys.stdout = stdout
@@ -50,6 +83,7 @@ def main():
 
         if 'm' in modo:
             summarizer(file_name)
+            att_context({'summarization': True}, file_name)
 
         print_log(f"{'MAIN':<10}: EXECUÇÃO COMPLETA")
 

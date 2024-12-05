@@ -1,10 +1,12 @@
 #/bin/bash
 
+mode=$1
+
 eval "$(conda shell.bash hook)"
 conda activate votacoes
 
-for ano in $(seq 2023 -1 1989)
+for year in $(seq 2024 -1 1989)
 do
-    echo "$ano"
-    python3 main.py $ano snbc
+    echo "$year"
+    python3 main.py $year $mode
 done
