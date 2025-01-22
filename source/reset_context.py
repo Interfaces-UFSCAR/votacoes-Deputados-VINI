@@ -5,7 +5,7 @@ import json
 def reset_context():
     context = {}
     
-    for ano in range(1989, 2025):
+    for ano in range(2018, 2025):
         inicio = datetime(ano, 1, 1)
         fim = datetime(ano, 12, 31)
 

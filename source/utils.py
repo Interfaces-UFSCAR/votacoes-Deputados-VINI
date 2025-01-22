@@ -47,6 +47,26 @@ def run_assync(func: Callable, args: Iterable = []):
 def print_log(message: str, flush= True):
     print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {message}", flush= flush)
 
+def att_context(context: dict, file_name: str):
+    with open(f"./data/context.json", mode= 'r') as context_file:
+        full_context = json.load(context_file)
+        
+    full_context[file_name] |= context
+    
+    with open(f"./data/context.json", mode= 'w') as context_file:
+        json.dump(full_context, context_file)
+
+def get_context(file_name: str) -> dict:
+    with open(f"./data/context.json", mode= 'r') as context_file:
+        return json.load(context_file)[file_name]
+    
+def get_file_name(ano):
+    return f"{ano}-01-01_{ano}-12-31"
+
+def read_plot(filename: str) -> str:
+    with open(f"./data/plots/{filename}.html", "r") as file:
+        return file.read()
+
     
 
 
