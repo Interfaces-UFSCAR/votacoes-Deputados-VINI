@@ -1,10 +1,10 @@
 import requests
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
-from requests.exceptions import MissingSchema, RetryError, HTTPError
+from requests.exceptions import RetryError, HTTPError
 from datetime import datetime
 from collections.abc import Iterable, Generator
-from io import TextIOWrapper
+import os
 
 import pandas as pd
 
@@ -14,7 +14,9 @@ from .utils import *
 BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
 
 def _get(url: str) -> dict | list[dict]:
-    
+    '''
+    faz uma requisição get e retorna um dicionario ou lista de dicionários resultante.
+    '''
     session = requests.Session()
     retries = Retry(total=20, backoff_factor=1, status_forcelist=[504, 502, 500, 503])
     session.mount('https://', HTTPAdapter(max_retries=retries))
@@ -25,6 +27,9 @@ def _get(url: str) -> dict | list[dict]:
     return response.json()['dados']
 
 def _get_with_many_pages(url_base: str, parametros: Iterable[str]) -> list[dict]:
+    '''
+    Faz uma requisição get com paginação(adaptada apenas para api da camara)
+    '''
     pagina = 1
     continue_buscando = True
     total_dados = []
@@ -44,8 +49,12 @@ def _get_with_many_pages(url_base: str, parametros: Iterable[str]) -> list[dict]
             total_dados.extend(dados)
 
             pagina += 1
+        #
 
 def _get_pdf(url: str, file_name: str):
+    '''
+    Faz o download do pdf de uma proposição
+    '''
     if url != None:
         try:
             response = requests.get(url)
@@ -57,6 +66,9 @@ def _get_pdf(url: str, file_name: str):
             save_pdf(file_name, response.content)
 
 def _get_proposicoes_afetadas(proposicoes: Iterable[dict]) -> list[dict]:
+    '''
+    Coleta as proposições afetadas em uma votação
+    '''
     proposicoes_afetadas = []
 
     for prop in proposicoes:
@@ -69,6 +81,9 @@ def _get_proposicoes_afetadas(proposicoes: Iterable[dict]) -> list[dict]:
     return proposicoes_afetadas
 
 def _get_proposicao_citada(url: str) -> dict:
+    '''
+    Coleta a proposição citada em uma votação
+    '''
     prop_id = url.rsplit(sep= '/', maxsplit= 1)[-1]
     
     try:
@@ -79,6 +94,7 @@ def _get_proposicao_citada(url: str) -> dict:
         run_assync(func= _get_pdf, args= [resultado['urlInteiroTeor'], f"./data/proposicoes/citadas/{prop_id}"])
 
         return resultado
+    #
 
 
 def _processar_votos(votos: Iterable[dict], 
@@ -86,7 +102,7 @@ def _processar_votos(votos: Iterable[dict],
     '''
         Transforma o resultado da request de votos em um dicionario com a estrutura {'id_deputado': {'id_votacao': 'voto'}}
         Entrada: resultado da resquest de votos
-        Saída: dicionario de votos
+        Saída: dicionário de votos
     '''
     votos = pd.DataFrame(votos)
 
@@ -101,6 +117,9 @@ def _processar_votos(votos: Iterable[dict],
 
 
 def _get_votacao(id: str) -> dict:
+    '''
+    Coleta as informações de uma votação
+    '''
 
     # Ver se existem dados de votos
     votos = _get(f'{BASE_URL}/votacoes/{id}/votos')
@@ -160,46 +179,75 @@ def _get_id_votacoes(data_inicio: datetime,
 
     return total_data
 
-
-def _get_deputados(votacoes: list) -> dict:
+def _get_deputados(votacoes: list, 
+                   data_inicio: datetime, 
+                   data_fim: datetime) -> dict:
     
     deputados = {}
     for votacao in votacoes.values():
         votos = votacao['votos']
         
-        for key, value in votos.items():
+        for deputado_id, voto in votos.items():
             try: 
-                deputados[key]['votos'] |= value
+                deputados[deputado_id]['votos'] |= voto
             except KeyError:
+                print_log(f"{'SCRAPPER':<10}: Deputado {deputado_id}")
+                
                 deputados |= {
-                    key: {'votos': value}
+                    deputado_id: {'votos': voto}
                 }
-                deputados[key] |= _get(f'{BASE_URL}/deputados/{key}') 
-    
+                parametros = [f'id={deputado_id}',
+                              f'dataInicio={data_inicio.strftime("%Y-%m-%d")}',
+                              f'dataFim={data_fim.strftime("%Y-%m-%d")}']
+                try:
+                    deputados[deputado_id] |= _get(f'{BASE_URL}/deputados?' + '&'.join(parametros))[-1]
+                # Trata Bug da API
+                except IndexError:
+                    deputado = _get(f'{BASE_URL}/deputados/{deputado_id}')
+
+                    deputados[deputado_id] |= {
+                        "id": deputado['ultimoStatus']['id'],
+                        "uri": deputado['ultimoStatus']['uri'],
+                        "nome": deputado['ultimoStatus']['nome'],
+                        "siglaPartido": deputado['ultimoStatus']['siglaPartido'],
+                        "uriPartido": deputado['ultimoStatus']['uriPartido'],
+                        "siglaUf": deputado['ultimoStatus']['siglaUf'],
+                        "idLegislatura": deputado['ultimoStatus']['idLegislatura'],
+                        "urlFoto": deputado['ultimoStatus']['urlFoto'],
+                        "email": deputado['ultimoStatus']['email'],
+                    }
+                #
+                deputados[deputado_id]['votos'] |= voto
+            #
+        #
+    #
+
     return deputados
 
 def _get_discursos(deputados: dict, 
-                   data_inicio: datetime, 
-                   data_fim: datetime) -> Generator[dict, str]:
+                   file_name: str) -> Generator[dict, str]:
     
+    data_inicio, data_fim = file_name.split('_')
     for deputado in deputados.keys():
-        parametros = [f'dataInicio={data_inicio.strftime("%Y-%m-%d")}',
-                      f'dataFim={data_fim.strftime("%Y-%m-%d")}']
+        parametros = [f'dataInicio={data_inicio}',
+                      f'dataFim={data_fim}']
+        
+        if not os.path.exists(f'./data/jsons/discursos/{file_name}_{deputado}.json'):
+            print_log(f"{'SCRAPPER':<10}: DEPUTADO: {deputado}", flush=True)
+            discursos = _get_with_many_pages(f'{BASE_URL}/deputados/{deputado}/discursos?', parametros)
+            
+            yield deputado, discursos
+    
+    #
 
-        discursos = _get_with_many_pages(f'{BASE_URL}/deputados/{deputado}/discursos?', parametros)
-
-        yield deputado, discursos
-
-def _get_dicursos_from_deputados(data_inicio: datetime, 
-             data_fim: datetime, 
-             file_name: str):
+def _get_dicursos_from_deputados(file_name: str):
     
     deputados = load_json(f'{file_name}_deputados')
     print_log(f"{'SCRAPPER':<10}: COLETA DAS INFORMAÇOES DOS DISCURSOS----")
 
-    for deputado, discursos in _get_discursos(deputados, data_inicio, data_fim):
-        print_log(f"{'SCRAPPER':<10}: DEPUTADO: {deputado}", flush=True)
+    for deputado, discursos in _get_discursos(deputados, file_name):
         run_assync(func= save_json, args= [f'discursos/{file_name}_{deputado}', discursos])
+    #
         
 
 
@@ -207,34 +255,41 @@ def scrapper(data_inicio: datetime,
              data_fim: datetime, 
              file_name: str):
     
-    print_log(f"{'SCRAPPER':<10}: COLETA DOS ID COMEÇANDO-----------------")
+    context = get_context(file_name)
 
-    ids = _get_id_votacoes(data_inicio, data_fim)
+    if not context['votacoes']:
+        print_log(f"{'SCRAPPER':<10}: COLETA DOS ID COMEÇANDO-----------------")
 
-    print_log(f"{'SCRAPPER':<10}: COLETADOS {len(ids):>10} IDS----------------")
+        ids = _get_id_votacoes(data_inicio, data_fim)
 
-    print_log(f"{'SCRAPPER':<10}: COLETA DAS INFORMAÇOES DAS VOTAÇÕES-----")
+        print_log(f"{'SCRAPPER':<10}: COLETADOS {len(ids):>10} IDS----------------")
+        print_log(f"{'SCRAPPER':<10}: COLETA DAS INFORMAÇOES DAS VOTAÇÕES-----")
 
-    votacoes = {} 
-    for indice, id in enumerate(ids):
-        try:
-            votacoes |= {id: _get_votacao(id)}
-            
-            print_log(f"{'SCRAPPER':<10}: indice {indice:<10}:  COLETADO")
-        except VotacaoSemVotos:
-            print_log(f"{'SCRAPPER':<10}: indice {indice:<10}: SEM VOTOS", flush= False)
+        votacoes = {} 
+        for indice, id in enumerate(ids):
+            try:
+                votacoes |= {id: _get_votacao(id)}
+                
+                print_log(f"{'SCRAPPER':<10}: indice {indice:<10}:  COLETADO")
+            except VotacaoSemVotos:
+                print_log(f"{'SCRAPPER':<10}: indice {indice:<10}: SEM VOTOS", flush= False)
 
-    save_json(file_name + "_votacoes", votacoes)
-    att_context({'votacoes': True}, file_name)
+        save_json(file_name + "_votacoes", votacoes)
+        att_context({'votacoes': True}, file_name)
+        votacoes = load_json(file_name + "_votacoes")
 
-    print_log(f"{'SCRAPPER':<10}: COLETA DAS INFORMAÇOES DOS DEPUTADOS----")
+    if not context['deputados']:
+        print_log(f"{'SCRAPPER':<10}: COLETA DAS INFORMAÇOES DOS DEPUTADOS----")
+        if context['votacoes']:
+            votacoes = load_json(file_name + "_votacoes")
 
-    deputados = _get_deputados(votacoes)
-    save_json(file_name + "_deputados", deputados)
-    att_context({'deputados': True}, file_name)
+        deputados = _get_deputados(votacoes, data_inicio, data_fim)
+        save_json(file_name + "_deputados", deputados)
+        att_context({'deputados': True}, file_name)
 
-    process = run_assync(func= _get_dicursos_from_deputados, args= [data_inicio, data_fim, file_name])
+    if not context['discursos']:
+        process = run_assync(func= _get_dicursos_from_deputados, args= [file_name])
 
-    return process
+        return process
 
     

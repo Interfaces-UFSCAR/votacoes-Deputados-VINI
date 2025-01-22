@@ -1,6 +1,5 @@
 from .utils import *
 
-import logging
 import itertools
 
 import pandas as pd
@@ -33,20 +32,18 @@ def create_network(deputados: dict, total_votacoes: int) -> nx.Graph:
                 if not id_dep1 in graph:
                     graph.add_node(
                         id_dep1, 
-                        nome= deputados[id_dep1]['ultimoStatus']['nomeEleitoral'],
-                        partido=  deputados[id_dep1]['ultimoStatus']['siglaPartido'],
-                        uf=  deputados[id_dep1]['ultimoStatus']['siglaUf'],
-                        condicao=  deputados[id_dep1]['ultimoStatus']['condicaoEleitoral']
+                        nome= deputados[id_dep1]['nome'],
+                        partido=  deputados[id_dep1]['siglaPartido'],
+                        uf=  deputados[id_dep1]['siglaUf'],
                         
                     )
 
                 if not id_dep2 in graph:
                     graph.add_node(
                         id_dep2, 
-                        nome= deputados[id_dep2]['ultimoStatus']['nomeEleitoral'],
-                        partido=  deputados[id_dep2]['ultimoStatus']['siglaPartido'],
-                        uf=  deputados[id_dep2]['ultimoStatus']['siglaUf'],
-                        condicao=  deputados[id_dep2]['ultimoStatus']['condicaoEleitoral']
+                        nome= deputados[id_dep2]['nome'],
+                        partido=  deputados[id_dep2]['siglaPartido'],
+                        uf=  deputados[id_dep2]['siglaUf'],
                     )
                 
                 graph.add_edge(id_dep1, id_dep2, concordancia= concordancia)
