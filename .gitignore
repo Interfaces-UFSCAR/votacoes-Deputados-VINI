@@ -1,4 +1,8 @@
-data/*/*
+data/*/*.*
+data/*/*/*.*
 *.out
 __pycache__
 *.txt
+.vscode
+teste.py
+context.json
