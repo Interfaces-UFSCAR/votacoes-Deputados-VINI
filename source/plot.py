@@ -1,9 +1,10 @@
 from fa2 import ForceAtlas2
 import networkx as nx
 import ipysigma as sigma
-import pickle
+import random
 
 from .utils import *
+from .metrics import DeputiesNetwork
 
 CORES_PARTIDOS = {
     "AVANTE": "#d27901",
@@ -41,6 +42,7 @@ CORES_PARTIDOS = {
     "PPS": "#ff008d",
     "PR": "#0051a0",
     "PRB": "#009c39",
+    "PRD": "#0C3F86",
     "PRN": "#2171cc",
     "PRONA": "#024d3d",
     "PROS": "#f2701a",
@@ -101,13 +103,19 @@ def _apply_force_atlas(graph: nx.Graph):
 
     nx.set_node_attributes(graph, positions_dict)
 
-def plot_nework(network_name: str, 
+def plot_nework(file_name: str, 
                 plot_name: str,
                 node_color: str):
     
-    graph = load_graph(network_name)
-        
+    network = DeputiesNetwork(file_name, raw_net= 'raw' in plot_name)
+    graph = network.graph
+    
+    random_state = random.getstate()
+    random.seed(7)
+
     _apply_force_atlas(graph)
+
+    random.setstate(random_state)
 
     sigma.Sigma.set_defaults(800, max_categorical_colors= 50, node_size_range= 5)
     
@@ -118,7 +126,7 @@ def plot_nework(network_name: str,
     )
 
     if node_color == 'partido':
-        parameters |= dict(node_color_palette= CORES_PARTIDOS)
+        parameters |= dict(node_color_palette= {partido: CORES_PARTIDOS[partido] for partido in network.parties.keys()})
     
     sigma.Sigma(**parameters).to_html(f'./data/plots/{plot_name}.html')
 
