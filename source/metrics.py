@@ -1,6 +1,7 @@
 from .utils import *
 import networkx as nx
 
+from itertools import combinations
 
 def weight_function(node1, node2, data):
     return 1/data['concordancia']
@@ -17,11 +18,12 @@ class DeputiesNetwork():
         self.parties, self.communities, self.parties_in_communities = self.__get_parties_and_communities()
         
         # Variaveis numéricas
-        self.distances = None 
+        self.distances = None
+        self.avarege_distance = None
         self.partiesDistances = None
         self.communitiesDistances = None
-        self.partiesCoheion = None
-        self.communitiesCohesion = None
+        self.partiesFragmentation = None
+        self.communitiesFragmentation = None
         self.partiesIsolation = None
         self.communitiesIsolation = None
 
@@ -30,10 +32,11 @@ class DeputiesNetwork():
 
     def __initDistances(self):
         self.distances = dict(nx.algorithms.all_pairs_dijkstra_path_length(self.graph, weight='concordancia'))
+        self.avarege_distance = self.__get_avarege_distance()
         self.partiesDistances = self.__get_parties_distances()
         self.communitiesDistances = self.__get_communities_distances()
-        self.partiesCoheion = {party: 1/self.fragmentation(party) for party in self.parties}
-        self.communitiesCohesion = {community: 1/self.fragmentation(community) for community in self.communities}
+        self.partiesFragmentation = {party: self.fragmentation(self.parties[party]) for party in self.parties}
+        self.communitiesFragmentation = {community: self.fragmentation(self.communities[community]) for community in self.communities}
         self.partiesIsolation = self.__get_parties_isolation()
         self.communitiesIsolation = self.__get_communities_isolation()
 
@@ -68,7 +71,7 @@ class DeputiesNetwork():
         distances = {}
         
         for idx, (partyA, partyA_nodes) in enumerate(self.parties.items()):
-            for partyB, partyB_nodes in list(self.parties.items())[idx:]: 
+            for partyB, partyB_nodes in list(self.parties.items())[idx+1:]: 
                 distance = self.distance_between_groups(partyA_nodes, partyB_nodes)
                 try:
                     distances[partyA] |= {partyB: distance}
@@ -85,7 +88,7 @@ class DeputiesNetwork():
         distances = {}
         
         for idx, (communityA, communityA_nodes) in enumerate(self.communities.items()):
-            for communityB, communityB_nodes in list(self.communities.items())[idx:]: 
+            for communityB, communityB_nodes in list(self.communities.items())[idx+1:]: 
                 distance = self.distance_between_groups(communityA_nodes, communityB_nodes)
                 try:
                     distances[communityA] |= {communityB: distance}
@@ -123,6 +126,13 @@ class DeputiesNetwork():
 
         return isolation
 
+    def __get_avarege_distance(self) -> float:
+        avarege_distance = 0.0
+        for (node_id_a, _), (node_id_b, _) in combinations(list(self.nodes), 2):
+            avarege_distance += self.distances[node_id_a][node_id_b] 
+
+        return 2 / ((len(self.nodes) * len(self.nodes) - 1)) * avarege_distance
+
     def getParties(self) -> dict:
         return self.parties.copy()
 
@@ -150,11 +160,11 @@ class DeputiesNetwork():
     def getCommitiesDistances(self) -> dict:
         return self.communitiesDistances.copy()
     
-    def getPartiesCohesion(self) -> dict:
-        return self.partiesCoheion.copy()
+    def getPartiesFragmentation(self) -> dict:
+        return self.partiesFragmentation.copy()
 
-    def getCommitiesCohesion(self) -> dict:
-        return self.communitiesCohesion.copy()
+    def getCommitiesFragmentation(self) -> dict:
+        return self.communitiesFragmentation.copy()
     
     def getPartiesIsolation(self) -> dict:
         return self.partiesIsolation.copy()
@@ -162,7 +172,7 @@ class DeputiesNetwork():
     def getCommitiesIsolation(self) -> dict:
         return self.communitiesIsolation.copy()
 
-    def distance_between_groups(self, groupA: list[str], groupB: list[str]) -> float:
+    def distance_between_groups(self, groupA: list[tuple[str, dict]], groupB: list[tuple[str, dict]]) -> float:
         seize_A = len(groupA)
         seize_B = len(groupB)
         total = 0
@@ -173,5 +183,5 @@ class DeputiesNetwork():
         
         return total/(seize_A*seize_B)
 
-    def fragmentation(self, group: list[str]):
+    def fragmentation(self, group: list[tuple[str, dict]]) -> float:
         return self.distance_between_groups(group, group)
