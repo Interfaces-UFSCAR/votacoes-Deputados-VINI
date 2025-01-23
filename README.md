@@ -2,26 +2,6 @@
 
 ## Plots das Redes de Deputados(2019-2024)
 
-[2019 - Rede sem Backbone](./data/plots/2019-01-01_2019-12-31_raw_net.html)
-[2020 - Rede sem Backbone](./data/plots/2020-01-01_2020-12-31_raw_net.html)
-[2021 - Rede sem Backbone](./data/plots/2021-01-01_2021-12-31_raw_net.html)
-[2022 - Rede sem Backbone](./data/plots/2022-01-01_2022-12-31_raw_net.html)
-[2023 - Rede sem Backbone](./data/plots/2023-01-01_2023-12-31_raw_net.html)
-[2024 - Rede sem Backbone](./data/plots/2024-01-01_2024-12-31_raw_net.html)
-
-[2019 - Partidos](./data/plots/2019-01-01_2019-12-31_backboned_net.html)
-[2020 - Partidos](./data/plots/2020-01-01_2020-12-31_backboned_net.html)
-[2021 - Partidos](./data/plots/2021-01-01_2021-12-31_backboned_net.html)
-[2022 - Partidos](./data/plots/2022-01-01_2022-12-31_backboned_net.html)
-[2023 - Partidos](./data/plots/2023-01-01_2023-12-31_backboned_net.html)
-[2024 - Partidos](./data/plots/2024-01-01_2024-12-31_backboned_net.html)
-
-[2019 - Comunidades](./data/plots/2019-01-01_2019-12-31_net.html)
-[2020 - Comunidades](./data/plots/2020-01-01_2020-12-31_net.html)
-[2021 - Comunidades](./data/plots/2021-01-01_2021-12-31_net.html)
-[2022 - Comunidades](./data/plots/2022-01-01_2022-12-31_net.html)
-[2023 - Comunidades](./data/plots/2023-01-01_2023-12-31_net.html)
-[2024 - Comunidades](./data/plots/2024-01-01_2024-12-31_net.html)
 
 ## **RESUMO DO PROJETO PROPOSTO**
 
