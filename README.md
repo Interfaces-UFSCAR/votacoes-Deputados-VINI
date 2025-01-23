@@ -1,5 +1,28 @@
 # votacoes-Deputados-VINI
 
+## Plots das Redes de Deputados(2019-2024)
+
+[2019 - Rede sem Backbone](./data/plots/2019-01-01_2019-12-31_raw_net.html)
+[2020 - Rede sem Backbone](./data/plots/2020-01-01_2020-12-31_raw_net.html)
+[2021 - Rede sem Backbone](./data/plots/2021-01-01_2021-12-31_raw_net.html)
+[2022 - Rede sem Backbone](./data/plots/2022-01-01_2022-12-31_raw_net.html)
+[2023 - Rede sem Backbone](./data/plots/2023-01-01_2023-12-31_raw_net.html)
+[2024 - Rede sem Backbone](./data/plots/2024-01-01_2024-12-31_raw_net.html)
+
+[2019 - Partidos](./data/plots/2019-01-01_2019-12-31_backboned_net.html)
+[2020 - Partidos](./data/plots/2020-01-01_2020-12-31_backboned_net.html)
+[2021 - Partidos](./data/plots/2021-01-01_2021-12-31_backboned_net.html)
+[2022 - Partidos](./data/plots/2022-01-01_2022-12-31_backboned_net.html)
+[2023 - Partidos](./data/plots/2023-01-01_2023-12-31_backboned_net.html)
+[2024 - Partidos](./data/plots/2024-01-01_2024-12-31_backboned_net.html)
+
+[2019 - Comunidades](./data/plots/2019-01-01_2019-12-31_net.html)
+[2020 - Comunidades](./data/plots/2020-01-01_2020-12-31_net.html)
+[2021 - Comunidades](./data/plots/2021-01-01_2021-12-31_net.html)
+[2022 - Comunidades](./data/plots/2022-01-01_2022-12-31_net.html)
+[2023 - Comunidades](./data/plots/2023-01-01_2023-12-31_net.html)
+[2024 - Comunidades](./data/plots/2024-01-01_2024-12-31_net.html)
+
 ## **RESUMO DO PROJETO PROPOSTO**
 
 O objetivo desse projeto é buscar compreender a relação entre os deputados, seus partidos e o voto escolhido em diversos temas da Câmara dos Deputados, a fim de mapear as coligações, configurações das bases de sustentação e oposição dos mandatos presidenciais, além do fisiologismo de alguns partidos dentro esse órgão. Isso será feito analisando os dados abertos da Câmara dos Deputados, com o auxílio de técnicas computacionais como Processamento de Linguagem Natural(PLN) e Análise de Redes Complexas. Primeiramente os dados através da API disponibilizada pela Câmara, após será identificado as temáticas das votações a partir dos textos que descrevem as votações com o uso de PLN e em seguida construindo uma rede de relações entre os candidatos, seus votos, orientação dos partidos e temáticas com o auxílio de grafos. Com a rede estruturada, a análise será feita com técnicas de Análise de Redes Complexas. Esse projeto ajudará a compreender a dinâmica política da Câmara dos deputados, ajudando a trazer a tona as contradições e interesses dos membros da Câmara dos Deputados, ajudando na tomada de decisões políticas e até num projeto futuro democratizando o acesso a essas informações com uma ferramenta pública e simplificada para consulta dessa informações.
