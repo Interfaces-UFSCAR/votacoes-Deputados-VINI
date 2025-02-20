@@ -39,6 +39,7 @@ class DeputiesNetwork():
         self.communitiesFragmentation = {community: self.fragmentation(self.communities[community]) for community in self.communities}
         self.partiesIsolation = self.__get_parties_isolation()
         self.communitiesIsolation = self.__get_communities_isolation()
+        self.partiesInCommunitiesIsolation = self.__get_parties_in_communities_isolation()
 
     def __get_parties_and_communities(self) -> tuple[dict]:
         parties = {}
@@ -58,12 +59,12 @@ class DeputiesNetwork():
                     communities[data['comunidade']] = [(node, data)]
 
                 try:
-                    parties_in_communities[data['comunidade']][data['partido']] += 1
+                    parties_in_communities[data['comunidade']][data['partido']].append((node, data))
                 except KeyError:
                     try:
-                        parties_in_communities[data['comunidade']][data['partido']] = 1
+                        parties_in_communities[data['comunidade']][data['partido']] = [(node, data)]
                     except KeyError:
-                        parties_in_communities[data['comunidade']] = {data['partido']: 1}
+                        parties_in_communities[data['comunidade']] = {data['partido']: [(node, data)]}
 
         return parties, communities, parties_in_communities
     
@@ -106,9 +107,13 @@ class DeputiesNetwork():
         isolation = {}
         for party in self.parties:
             isolation |= {party: 0}
+            normalizer = 0
             for other_party in self.parties:
                 if party != other_party:
-                    isolation[party] += self.partiesDistances[party][other_party]
+                    length = len(self.parties[other_party])
+                    isolation[party] += self.partiesDistances[party][other_party] * length
+                    normalizer += length
+            isolation[party] /= normalizer
             #
         #
 
@@ -118,9 +123,34 @@ class DeputiesNetwork():
         isolation = {}
         for community in self.communities:
             isolation |= {community: 0}
+            normalizer = 0
             for other_community in self.communities:
                 if community != other_community:
-                    isolation[community] += self.communitiesDistances[community][other_community]
+                    length = len(self.communities[other_community])
+                    isolation[community] += self.communitiesDistances[community][other_community] * length
+                    normalizer += length
+            isolation[community] /= normalizer
+            #
+        #
+
+        return isolation
+
+    def __get_parties_in_communities_isolation(self) -> dict:
+        isolation = {}
+        for community in self.parties_in_communities:
+            isolation |= {community: {}}
+            for party in self.parties_in_communities[community]:
+                isolation[community] |= {party: 0}
+                normalizer = 0
+                for other_party in self.parties_in_communities[community]:
+                    if party != other_party:
+                        length = len(self.parties_in_communities[community][other_party])
+                        isolation[community][party] += self.distance_between_groups(self.parties_in_communities[community][party], self.parties_in_communities[community][other_party]) * length
+                        normalizer += length
+                    #
+                #
+                if normalizer != 0:
+                    isolation[community][party] /= normalizer
             #
         #
 
@@ -157,20 +187,23 @@ class DeputiesNetwork():
     def getPartiesDistances(self) -> dict:
         return self.partiesDistances.copy()
     
-    def getCommitiesDistances(self) -> dict:
+    def getCommunitiesDistances(self) -> dict:
         return self.communitiesDistances.copy()
     
     def getPartiesFragmentation(self) -> dict:
         return self.partiesFragmentation.copy()
 
-    def getCommitiesFragmentation(self) -> dict:
+    def getCommunitiesFragmentation(self) -> dict:
         return self.communitiesFragmentation.copy()
     
     def getPartiesIsolation(self) -> dict:
         return self.partiesIsolation.copy()
     
-    def getCommitiesIsolation(self) -> dict:
+    def getCommunitiesIsolation(self) -> dict:
         return self.communitiesIsolation.copy()
+    
+    def getPartiesInCommunitiesIsolation(self) -> dict:
+        return self.partiesInCommunitiesIsolation.copy()
 
     def distance_between_groups(self, groupA: list[tuple[str, dict]], groupB: list[tuple[str, dict]]) -> float:
         seize_A = len(groupA)
