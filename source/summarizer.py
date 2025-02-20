@@ -238,8 +238,8 @@ def summarizer(file_name: str):
         os.mkdir(f'./data/resumos/{file_name}')
     
     for community_id, community in network.getCommunities().items():
-        if community_id == 1:
-            print_log(f"{'SUMMARIZER':<10}: Iniciando sumarização da COMUNIDADE {community_id}")
+        print_log(f"{'SUMMARIZER':<10}: Iniciando sumarização da COMUNIDADE {community_id}")
+        if not os.path.exists(f'{file_name}/_{file_name}-{community_id}.txt'):
             summary = _summarize_group(community, summarizer, file_name)
             save_summary(f'{file_name}/_{file_name}-{community_id}', summary)
 
