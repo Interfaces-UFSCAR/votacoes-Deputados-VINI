@@ -75,7 +75,7 @@ CORES_PARTIDOS = {
     "UNIÃO": "#1481c5"
 }
 
-COPRES_COMUNIDADES = {
+CORES_COMUNIDADES = {
     0: '#1f77b4',  # Azul
     1: '#ff7f0e',  # Laranja
     2: '#2ca02c',  # Verde
