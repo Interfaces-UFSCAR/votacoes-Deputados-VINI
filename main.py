@@ -35,9 +35,6 @@ def clean_mode(mode: str, context: dict) -> str:
         mode += 'c'
         context['communities'] = False
 
-    if context['summarization'] or not(context['discursos'] or 's' in mode):
-        mode = mode.replace('m', '')
-
     return mode
 
 def main():

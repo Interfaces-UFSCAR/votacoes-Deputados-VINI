@@ -76,26 +76,16 @@ CORES_PARTIDOS = {
 }
 
 CORES_COMUNIDADES = {
-    0: '#1f77b4',  # Azul
-    '0': '#1f77b4',  # Azul
-    1: '#ff7f0e',  # Laranja
-    '1': '#ff7f0e',  # Laranja
-    2: '#2ca02c',  # Verde
-    '2': '#2ca02c',  # Verde
-    3: '#d62728',  # Vermelho
-    '3': '#d62728',  # Vermelho
-    4: '#9467bd',  # Roxo
-    '4': '#9467bd',  # Roxo
-    5: '#8c564b',  # Marrom
-    '5': '#8c564b',  # Marrom
-    6: '#e377c2',  # Rosa
-    '6': '#e377c2',  # Rosa
-    7: '#7f7f7f',  # Cinza
-    '7': '#7f7f7f',  # Cinza
-    8: '#bcbd22',  # Amarelo
-    '8': '#bcbd22',  # Amarelo
-    9: '#17becf',   # Ciano
-    '9': '#17becf'   # Ciano
+    0: '#1f77b4',  '0': '#1f77b4',  # Azul
+    1: '#ff7f0e',  '1': '#ff7f0e',  # Laranja
+    2: '#2ca02c',  '2': '#2ca02c',  # Verde
+    3: '#d62728',  '3': '#d62728',  # Vermelho
+    4: '#9467bd',  '4': '#9467bd',  # Roxo
+    5: '#8c564b',  '5': '#8c564b',  # Marrom
+    6: '#e377c2',  '6': '#e377c2',  # Rosa
+    7: '#7f7f7f',  '7': '#7f7f7f',  # Cinza
+    8: '#bcbd22',  '8': '#bcbd22',  # Amarelo
+    9: '#17becf',  '9': '#17becf'   # Ciano
 }
 
 

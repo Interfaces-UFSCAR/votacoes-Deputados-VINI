@@ -19,6 +19,7 @@ dependencies:
   - huggingface_hub
   - accelerate
   - deepspeed
+  - tabulate
   - pip
   - pip: 
     - ipysigma
