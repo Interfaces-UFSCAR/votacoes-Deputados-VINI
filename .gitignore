@@ -8,6 +8,7 @@ data/proposicoes/*.*
 data/proposicoes/*/*.*
 data/resumos/*.*
 data/resumos/*/*.*
+*.html
 *.out
 __pycache__
 *.txt
