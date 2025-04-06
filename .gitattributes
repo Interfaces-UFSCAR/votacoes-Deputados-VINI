@@ -1,1 +1,2 @@
 *.html linguist-generated
+source/analise.ipynb linguist-language=Python
