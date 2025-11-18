@@ -2,15 +2,11 @@ data/jsons/*.*
 data/jsons/*/*.*
 data/logs/*.*
 data/logs/*/*.*
-data/networks/*.*
-data/networks/*/*.*
 data/proposicoes/*.*
 data/proposicoes/*/*.*
-data/resumos/*.*
-data/resumos/*/*.*
 *.out
 __pycache__
-*.txt
+token.txt
 .vscode
 teste.py
 context.json

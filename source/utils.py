@@ -3,11 +3,25 @@ import json
 from datetime import datetime
 from collections.abc import Iterable, Callable
 from multiprocessing import Process
+import os
 
 import networkx as nx
 
+def _create_folders_if_not_exists(file_dir: str):
+    path = file_dir.rsplit('/',1)
+    
+    if not os.path.exists(file_dir):
+        if not os.path.exists(path[0]):
+            _create_folders_if_not_exists(path[0])
+        else: 
+            os.mkdir(file_dir)
+
 def save_graph(file_name: str, graph: nx.Graph):
-    with open(f'./data/networks/{file_name}.pkl', 'wb') as pickle_file:
+    
+    file = f'./data/networks/{file_name}.pkl'
+    _create_folders_if_not_exists(file.rsplit('/', 1)[0])
+    
+    with open(file, 'wb') as pickle_file:
         pickle.dump(graph, pickle_file)
 
 def load_graph(file_name: str) -> nx.Graph:
@@ -17,7 +31,11 @@ def load_graph(file_name: str) -> nx.Graph:
     return graph
 
 def save_json(file_name: str, json_obj: dict | list | tuple):
-    with open(f'./data/jsons/{file_name}.json', 'w') as json_file:
+    
+    file = f'./data/jsons/{file_name}.json'
+    _create_folders_if_not_exists(file.rsplit('/',1)[0])
+
+    with open(file, 'w') as json_file:
         json.dump(json_obj, json_file)
 
 def load_json(file_name: str) -> dict | list | tuple:
@@ -27,7 +45,11 @@ def load_json(file_name: str) -> dict | list | tuple:
     return json_obj
 
 def save_summary(file_name: str, summary: str):
-    with open(f'./data/resumos/{file_name}.txt', 'w') as summary_file:
+    
+    file = f'./data/resumos/{file_name}.txt'
+    _create_folders_if_not_exists(file.rsplit('/',1)[0])
+
+    with open(file, 'w') as summary_file:
         summary_file.write(summary)
 
 def load_summary(file_name: str) -> str:
@@ -35,7 +57,10 @@ def load_summary(file_name: str) -> str:
         return '\n'.join(summary_file.readlines())
 
 def save_pdf(file_name: str, pdf_data: bytes):
-    with open(f'{file_name}.pdf', 'wb') as pdf:
+    file = f'{file_name}.pdf'
+    _create_folders_if_not_exists(file.rsplit('/',1)[0])
+    
+    with open(file, 'wb') as pdf:
         pdf.write(pdf_data)
 
 def run_assync(func: Callable, args: Iterable = []):

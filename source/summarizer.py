@@ -12,7 +12,10 @@ from accelerate import Accelerator, dispatch_model, infer_auto_device_map
 import torch
 import pandas as pd
 
-MAX_TOKENS = 2048
+MNT_FRAGMENT = 512
+MNT_SPEECH = 512
+MNT_DEPUTE = 512
+MNT_GROUP = 1024
 
 def process_message(message: dict) -> str:
     prompt = ''
@@ -79,18 +82,19 @@ def init_model() -> TextGenerationPipeline:
         device_map=device_map,
     )
 
+
     return {
         'gpu': model_pipeline_gpu,
-        'cpu': init_model_with_cpu()
+        #'cpu': init_model_with_cpu()
             }
 
-def __summarize(messages: list[dict], summarizer: TextGenerationPipeline) -> str:
+def __summarize(messages: list[dict], summarizer: TextGenerationPipeline, max_new_tokens: int) -> str:
     
     error = False
     with torch.no_grad():        
         try:
-            result = summarizer['gpu'](messages, max_new_tokens= MAX_TOKENS)
-        except torch.OutOfMemoryError as e:
+            result = summarizer['gpu'](messages, max_new_tokens= max_new_tokens)
+        except torch.cuda.OutOfMemoryError as e:
             error = True
             print_log(f"{'SUMMARIZER':<10}: {e}")
 
@@ -103,7 +107,7 @@ def __summarize(messages: list[dict], summarizer: TextGenerationPipeline) -> str
             raise DiscursoMuitoGrande(num_tokens, max_tokens)
         else:
             with torch.no_grad():
-                result = summarizer['cpu'](messages, max_new_tokens= MAX_TOKENS)
+                result = summarizer['cpu'](messages, max_new_tokens= max_new_tokens)
 
     return result[0]['generated_text'][1]['content']
     
@@ -112,10 +116,10 @@ def _summarize_speech_fragment(speech: str, summarizer: TextGenerationPipeline) 
     messages = [
             {"role": "system",
              "context": "Você é um assistente de análise política especializado em resumir discursos e identificar opiniões e posicionamentos de deputados.",
-             "content": f'Dado esse fragmento do discurso abaixo, elabore um resumo que conclua: (1) as principais opiniões expressas pelo deputado, (2) posicionamentos sobre políticas públicas, e (3) eventuais críticas ou apoios explícitos. Seja objetivo, claro e mantenha a essência do discurso. Não adicione informações que não estão no discurso. Faça o texto de forma corrida, sem títulos. Discurso: {speech[0]}'}
+             "content": f'Dado esse fragmento do discurso abaixo, elabore um resumo que conclua: (1) as principais opiniões expressas pelo deputado, (2) posicionamentos sobre políticas públicas, e (3) eventuais críticas ou apoios explícitos. Seja objetivo, claro e mantenha a essência do discurso. Não adicione informações que não estão no discurso. Faça o texto em tópicos, sem títulos. Discurso: {speech[0]}'}
         ]
     
-    return __summarize(messages, summarizer)
+    return __summarize(messages, summarizer, MNT_FRAGMENT)
 
 def _summarize_long_speech(speech: str, summarizer: TextGenerationPipeline, parts: int) -> str:
     
@@ -134,22 +138,22 @@ def _summarize_long_speech(speech: str, summarizer: TextGenerationPipeline, part
     messages = [
         {"role": "system",
         "context": "Você é um assistente de análise política especializado em resumir discursos e identificar opiniões e posicionamentos de deputados.",
-        "content": f'Dado o conjunto de resumos de fragmentos de um discurso do deputado, separados por ";", elabore um resumo que conclua: (1) as principais opiniões expressas pelo deputado, (2) posicionamentos sobre políticas públicas, e (3) eventuais críticas ou apoios explícitos. Seja objetivo, claro e mantenha a essência do discurso. Não adicione informações que não estão no discurso. Faça o texto de forma corrida, sem títulos. Discurso: {";".join(summaries)}'}
+        "content": f'Dado o conjunto de resumos de fragmentos de um discurso do deputado, separados por ";", elabore um resumo que conclua: (1) as principais opiniões expressas pelo deputado, (2) posicionamentos sobre políticas públicas, e (3) eventuais críticas ou apoios explícitos. Seja objetivo, claro e mantenha a essência do discurso. Não adicione informações que não estão no discurso. Faça o texto em tópicos, sem títulos. Discurso: {";".join(summaries)}'}
     ]
 
-    return __summarize(messages, summarizer)
+    return __summarize(messages, summarizer, MNT_SPEECH)
 
 def _summarize_speech(speech: str, summarizer: tuple) -> str:
     messages = [
         {"role": "system",
         "context": "Você é um assistente de análise política especializado em resumir discursos e identificar opiniões e posicionamentos de deputados.",
-        "content": f'Dado o discurso abaixo, elabore um resumo que conclua: (1) as principais opiniões expressas pelo deputado, (2) posicionamentos sobre políticas públicas, e (3) eventuais críticas ou apoios explícitos. Seja objetivo, claro e mantenha a essência do discurso. Não adicione informações que não estão no discurso. Faça o texto de forma corrida, sem títulos. Discurso: {speech[0]}'}
+        "content": f'Dado o discurso abaixo, elabore um resumo que conclua: (1) as principais opiniões expressas pelo deputado, (2) posicionamentos sobre políticas públicas, e (3) eventuais críticas ou apoios explícitos. Seja objetivo, claro e mantenha a essência do discurso. Não adicione informações que não estão no discurso. Faça o texto em tópicos, sem títulos. Discurso: {speech[0]}'}
     ]
 
     print_log(f"{'SUMMARIZER':<10}: Discurso {list(speech[1].keys())[0]}")
 
     try:
-        result = __summarize(messages, summarizer)
+        result = __summarize(messages, summarizer, MNT_SPEECH)
     except DiscursoMuitoGrande as e:
         print_log(f"{'SUMMARIZER':<10}: {e}")
         result = _summarize_long_speech(speech[0], summarizer, e.parts)
@@ -160,19 +164,19 @@ def _summarize_summaries(summary1: str, summary2: str, summarizer: tuple) -> str
     messages = [
         {"role": "system",
         "context": "Você é um assistente especializado em análise política que cria perfis de deputados com base em seus discursos.",
-        "content": f'Dado os resumos de dois discursos a seguir, elabore um novo resumo que combine as informações de ambos. Destaque as opiniões e posicionamentos que aparecem em ambos os resumos e preserve as informações mais relevantes de cada um. Seja objetivo, claro e mantenha a essência dos resumos. Não adicione informações que não estão nos textos. Faça o texto de forma corrida, sem títulos. Resumo 1: {summary1}. Resumo 2: {summary2}.'}
+        "content": f'Dado os resumos de dois discursos a seguir, elabore um novo resumo que combine as informações de ambos. Destaque as opiniões e posicionamentos que aparecem em ambos os resumos e preserve as informações mais relevantes de cada um. Seja objetivo, claro e mantenha a essência dos resumos. Não adicione informações que não estão nos textos. Faça o texto em tópicos, sem títulos. Resumo 1: {summary1}. Resumo 2: {summary2}.'}
     ]
      
-    return __summarize(messages, summarizer)
+    return __summarize(messages, summarizer, MNT_DEPUTE)
 
 def _summarize_deputies(dep1: str, dep2: str, summarizer: tuple) -> str:
     messages = [
         {"role": "system",
         "context": "Você é um especialista em análise política consolidando as opiniões de deputados em pares.",
-        "content": f'Dado o resumo de discursos de dois deputados a seguir, elabore um novo resumo que combine as informações de ambos. Destaque (1) os pontos favoráveis, (2) as críticas, e (3) qualquer opinião que apareça em ambos os resumos sempre ressaltando o que aparece em comum em ambos os resumos. Como o processamento é feito em pares, esses resumos podem ja ser resumos. Seja objetivo, claro e mantenha a essência dos resumos. Não adicione informações que não estão nos textos. Faça o texto de forma corrida, sem títulos. Resumo 1: {dep1}. Resumo 2: {dep2}.'}
+        "content": f'Dado o resumo de discursos de dois deputados a seguir, elabore um novo resumo que combine as informações de ambos. Destaque (1) os pontos favoráveis, (2) as críticas, e (3) qualquer opinião que apareça em ambos os resumos sempre ressaltando o que aparece em comum em ambos os resumos. Como o processamento é feito em pares, esses resumos podem ja ser resumos. Seja objetivo, claro e mantenha a essência dos resumos. Não adicione informações que não estão nos textos. Faça o texto em tópicos, sem títulos. Resumo 1: {dep1}. Resumo 2: {dep2}.'}
     ]
 
-    return __summarize(messages, summarizer)
+    return __summarize(messages, summarizer, MNT_GROUP)
 
 def _summarize_speeches(speeches: list[str], summarizer: tuple):
     speeches_length = len(speeches)
@@ -237,17 +241,19 @@ def summarizer(file_name: str):
     if not os.path.exists(f'./data/resumos/{file_name}'):
         os.mkdir(f'./data/resumos/{file_name}')
     
-    for community_id, community in network.getCommunities().items():
+    for community_id, community in sorted(network.getCommunities().items()):
         print_log(f"{'SUMMARIZER':<10}: Iniciando sumarização da COMUNIDADE {community_id}")
-        if not os.path.exists(f'{file_name}/_{file_name}-{community_id}.txt'):
+        if not os.path.exists(f'./data/resumos/{file_name}/_{file_name}-{community_id}.txt'):
             summary = _summarize_group(community, summarizer, file_name)
             save_summary(f'{file_name}/_{file_name}-{community_id}', summary)
+        print_log(f"{'SUMMARIZER':<10}: Sumarização da COMUNIDADE {community_id} concluída")
 
-    for party_id, party in network.getParties().items():
+    for party_id, party in sorted(network.getParties().items()):
         print_log(f"{'SUMMARIZER':<10}: Iniciando sumarização da COMUNIDADE {party_id}")
-        if not os.path.exists(f'{file_name}/_{file_name}-{party_id}.txt'):
+        if not os.path.exists(f'./data/resumos/{file_name}/_{file_name}-{party_id}.txt'):
             summary = _summarize_group(party, summarizer, file_name)
             save_summary(f'{file_name}/_{file_name}-{party_id}', summary)
+        print_log(f"{'SUMMARIZER':<10}: Sumarização da COMUNIDADE {party_id} concluída")
 
                 
           

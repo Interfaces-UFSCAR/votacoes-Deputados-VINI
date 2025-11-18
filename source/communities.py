@@ -64,6 +64,18 @@ def communities(file_name: str):
     #
     
     nodes_community = {node: {'comunidade': mode(nodes_communities[node])} for node in nodes}
+    communities_len_map = [[c, 0] for c in range(moda)]
+
+    for node in nodes_community.values():
+        idx = node["comunidade"]
+        communities_len_map[idx][1] += 1
+
+    communities_len_map.sort(key= lambda x: x[1])
+    map_comm = {c[0]: idx for idx, c in enumerate(communities_len_map)} 
+
+    for node in nodes_community:
+        nodes_community[node]["comunidade"] = map_comm[nodes_community[node]["comunidade"]]
+    
     nx.set_node_attributes(graph, nodes_community)
 
     save_graph(f'{file_name}_net', graph)

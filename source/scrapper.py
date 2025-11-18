@@ -2,7 +2,7 @@ import requests
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from requests.exceptions import RetryError, HTTPError
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections.abc import Iterable, Generator
 import os
 
@@ -133,13 +133,13 @@ def _get_votacao(id: str) -> dict:
     votacao = _get(f'{BASE_URL}/votacoes/{id}')
     votacao['votos'] = votos
 
-    prop_afetadadas = votacao['proposicoesAfetadas']
-    if prop_afetadadas != None:
-        votacao['proposicoesAfetadas'] = _get_proposicoes_afetadas(votacao['proposicoesAfetadas'])
+    # prop_afetadadas = votacao['proposicoesAfetadas']
+    # if prop_afetadadas != None:
+    #     votacao['proposicoesAfetadas'] = _get_proposicoes_afetadas(votacao['proposicoesAfetadas'])
 
-    prop_citada = votacao['ultimaApresentacaoProposicao']['uriProposicaoCitada']
-    if prop_citada != None:
-        votacao['ultimaApresentacaoProposicao']['uriProposicaoCitada'] = _get_proposicao_citada(prop_citada)
+    # prop_citada = votacao['ultimaApresentacaoProposicao']['uriProposicaoCitada']
+    # if prop_citada != None:
+    #     votacao['ultimaApresentacaoProposicao']['uriProposicaoCitada'] = _get_proposicao_citada(prop_citada)
 
     # Pegar as infos das proposicões
     
@@ -158,24 +158,44 @@ def _get_id_votacoes(data_inicio: datetime,
     '''
     
     total_data = []
-    data_fim = data_fim
+    inicio = data_inicio
 
-    while data_fim >= data_inicio:
+    if inicio.month + 3 > 12:
+        fim = datetime(inicio.year, 12, 31) 
+        next_inicio = datetime(inicio.year + 1, 1, 1)
+    else:
+        fim = inicio.replace(month= inicio.month + 3) 
+        next_inicio = fim 
+        fim -= timedelta(days = 1)
+    
+    if fim > data_fim:
+        fim = data_fim
+
+    while fim < data_fim:
         
         parametros = []
-
-        if data_fim.year == data_inicio.year:
-            parametros.append(f'dataInicio={data_inicio.strftime("%Y-%m-%d")}')
-
-        if data_fim.year + 1 == data_fim.year:
-            data_fim = datetime(data_fim.year, 12, 31)
         
-        parametros.append(f'dataFim={data_fim.strftime("%Y-%m-%d")}')
+        parametros.append(f'dataInicio={inicio.strftime("%Y-%m-%d")}')
+        parametros.append(f'dataFim={fim.strftime("%Y-%m-%d")}')
 
         resultado = _get_with_many_pages(f'{BASE_URL}/votacoes?', parametros)
         total_data.extend(pd.DataFrame(resultado)['id'].to_list())
-        data_fim = data_fim.replace(year=data_fim.year - 1)
+
+        inicio = next_inicio
+
+        if inicio.month + 3 > 12:
+            fim = datetime(inicio.year, 12, 31) 
+            next_inicio = datetime(inicio.year + 1, 1, 1)
+        else:
+            fim = inicio.replace(month= inicio.month + 3) 
+            next_inicio = fim 
+            fim -= timedelta(days = 1)
+        
+        if fim > data_fim:
+            fim = data_fim
+ 
     #
+
 
     return total_data
 
