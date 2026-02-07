@@ -1,4 +1,4 @@
-from fa2 import ForceAtlas2
+
 import networkx as nx
 import ipysigma as sigma
 import random
@@ -89,29 +89,29 @@ CORES_COMUNIDADES = {
 }
 
 
-FA2 = ForceAtlas2(
-                        # Behavior alternatives
-                        outboundAttractionDistribution=True,  # Dissuade hubs
-                        linLogMode=False,  # NOT IMPLEMENTED
-                        adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
-                        edgeWeightInfluence=1.0,
+# FA2 = ForceAtlas2(
+#                         # Behavior alternatives
+#                         outboundAttractionDistribution=True,  # Dissuade hubs
+#                         linLogMode=False,  # NOT IMPLEMENTED
+#                         adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
+#                         edgeWeightInfluence=1.0,
 
-                        # Performance
-                        jitterTolerance=1.0,  # Tolerance
-                        barnesHutOptimize=True,
-                        barnesHutTheta=1.2,
-                        multiThreaded=False,  # NOT IMPLEMENTED
+#                         # Performance
+#                         jitterTolerance=1.0,  # Tolerance
+#                         barnesHutOptimize=True,
+#                         barnesHutTheta=1.2,
+#                         multiThreaded=False,  # NOT IMPLEMENTED
 
-                        # Tuning
-                        scalingRatio=2.0,
-                        strongGravityMode=False,
-                        gravity=1.0,
+#                         # Tuning
+#                         scalingRatio=2.0,
+#                         strongGravityMode=False,
+#                         gravity=1.0,
 
-                        # Log
-                        verbose=True)
+#                         # Log
+#                         verbose=True)
 
 def _apply_force_atlas(graph: nx.Graph):
-    positions = FA2.forceatlas2(nx.to_numpy_array(graph,  weight= 'concordancia'), iterations=2000)
+    positions = nx.spring_layout(graph)
 
     positions_dict = {node:{'x':positions[i][0], 'y':positions[i][1]} for i, node in enumerate(graph.nodes)}
 
